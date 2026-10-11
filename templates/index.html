@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Improvement Assistant</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --light-bg: #f8f9fa;
+      --border: #dee2e6;
+      --text: #212529;
+      --error: #e63946;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #fafafa;
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-weight: 700;
+      font-size: 2.2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #6c757d;
+      font-size: 1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0.5rem 0 1.2rem;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: normal;
+      cursor: pointer;
+      background: #f1f3f5;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: 0.95rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      margin: 0;
+      cursor: pointer;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    button:disabled {
+      background: #adb5bd;
+      cursor: not-allowed;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      background: white;
+      color: var(--primary);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-btn:hover {
+      background: var(--light-bg);
+    }
+
+    .result-content {
+      background: var(--light-bg);
+      padding: 1.25rem;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      min-height: 60px;
+      font-family: inherit;
+      line-height: 1.6;
+      border: 1px solid var(--border);
+    }
+
+    /* Diff Highlighting */
+    .diff-view del {
+      background-color: #ffe6e6;
+      color: #c62828;
+      text-decoration: line-through;
+      padding: 0 2px;
+      border-radius: 3px;
+      display: inline;
+    }
+
+    .diff-view ins {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      text-decoration: none;
+      padding: 0 2px;
+      border-radius: 3px;
+      font-weight: 500;
+      display: inline;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .error {
+      color: var(--error);
+      background: #ffecec;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      border-left: 4px solid var(--error);
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .result-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .result-actions {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-feather-alt"></i> Text Improvement Assistant</h1>
+      <p class="subtitle">Refine your writing with AI-powered suggestions</p>
+    </header>
+
+    <main>
+      <div class="card">
+        <label for="text">Enter your text:</label>
+        <textarea id="text" placeholder="Paste your draft, email, or document here..."></textarea>
+
+        <label>Improvement types:</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="improvementType" value="grammar" checked> Grammar</label>
+          <label><input type="checkbox" name="improvementType" value="clarity" checked> Clarity</label>
+          <label><input type="checkbox" name="improvementType" value="style" checked> Style</label>
+          <label><input type="checkbox" name="improvementType" value="tone"> Tone</label>
+          <label><input type="checkbox" name="improvementType" value="conciseness"> Conciseness</label>
+          <label><input type="checkbox" name="improvementType" value="professionalism"> Professionalism</label>
+        </div>
+
+        <label for="model">AI Model:</label>
+        <select id="model">
+          {% for model in models %}
+          <option value="{{ model }}">{{ model }}</option>
+          {% endfor %}
+        </select>
+
+        <br><br>
+        <button id="submitBtn">
+          <span id="btnText">Improve Text</span>
+          <span id="btnSpinner" class="loading" style="display: none;"></span>
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div id="resultsContainer" style="display: none;">
+        <div class="card">
+          <p><strong>Model Used:</strong> <span id="modelUsed">—</span></p>
+        </div>
+
+        <div class="card">
+          <h3>Your Input</h3>
+          <div class="result-content" id="originalInput">—</div>
+        </div>
+
+        <div class="card">
+          <h3>Changes Highlighted</h3>
+          <div class="result-content diff-view" id="diffView">
+            Improvements will appear here...
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="result-header">
+            <h3>Final Corrected Text</h3>
+            <div class="result-actions">
+              <button class="action-btn" id="copyBtn" title="Copy to clipboard">
+                <i class="fas fa-copy"></i> Copy
+              </button>
+              <button class="action-btn" id="downloadBtn" title="Download as .txt file">
+                <i class="fas fa-download"></i> Download
+              </button>
+            </div>
+          </div>
+          <div class="result-content" id="correctedText">—</div>
+        </div>
+      </div>
+
+      <div id="error" class="error"></div>
+    </main>
+  </div>
+
+  <script>
+    const submitBtn = document.getElementById('submitBtn');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const errorDiv = document.getElementById('error');
+
+    function showError(message) {
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      resultsContainer.style.display = 'none';
+    }
+
+    function setButtonLoading(loading) {
+      const btnText = document.getElementById('btnText');
+      const btnSpinner = document.getElementById('btnSpinner');
+      if (loading)
+      {
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline-block';
+        submitBtn.disabled = true;
+      } else
+      {
+        btnText.style.display = 'inline';
+        btnSpinner.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    }
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const text = window.finalCorrectedText || '';
+      if (!text.trim()) return alert('No text to copy.');
+      navigator.clipboard.writeText(text).then(() => {
+        const original = document.getElementById('copyBtn').innerHTML;
+        document.getElementById('copyBtn').innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+          document.getElementById('copyBtn').innerHTML = original;
+        }, 2000);
+      }).catch(() => {
+        alert('Failed to copy text.');
+      });
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const text = window.finalCorrectedText || '';
+      if (!text.trim()) return alert('No text to download.');
+      const blob = new Blob([ text ], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'improved_text.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      const text = document.getElementById('text').value.trim();
+      const types = Array.from(document.querySelectorAll('input[name="improvementType"]:checked'))
+        .map(cb => cb.value);
+      const model = document.getElementById('model').value;
+
+      if (!text)
+      {
+        showError('Please enter some text to improve.');
+        return;
+      }
+
+      showError(''); // hide error
+      setButtonLoading(true);
+
+      try
+      {
+        const response = await fetch('/review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, improvementTypes: types, model })
+        });
+
+        const data = await response.json();
+
+        if (data.error)
+        {
+          showError(`Error: ${data.error}${data.details ? ' — ' + data.details : ''}`);
+        } else
+        {
+          window.finalCorrectedText = data.edited_text;
+
+          document.getElementById('modelUsed').textContent = data.model_used;
+          document.getElementById('originalInput').textContent = data.original_text;
+          document.getElementById('diffView').innerHTML = data.diff_html;
+          document.getElementById('correctedText').textContent = data.edited_text;
+
+          resultsContainer.style.display = 'block';
+        }
+      } catch (err)
+      {
+        showError(`Request failed: ${err.message || 'Unknown error'}`);
+      } finally
+      {
+        setButtonLoading(false);
+      }
+    });
+  </script>
+</body>
+
+</html>
